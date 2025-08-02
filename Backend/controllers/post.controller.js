@@ -1,4 +1,5 @@
 const PostModel = require('../models/post.model');
+const UserModel = require("../models/user.model");
 const {validationResult} = require('express-validator');
 
 //Text-only post (Given in assignment)
@@ -18,7 +19,7 @@ module.exports.CreatePost = async(req,res,next)=>{
             text
         })
         const savedPost = await newPost.save()
-        const populatedPost = await savedPost.populate('author','fullname')
+        const populatedPost = await savedPost.populate('author', 'fullname bio')
         return res.status(201).json(populatedPost)
     } catch (error) {
     return res.status(500).json({ message: "Server error", error: error.message });
@@ -26,27 +27,108 @@ module.exports.CreatePost = async(req,res,next)=>{
 
 }
 // for public Feed All latest post
-module.exports.getAllPost = async(req,res,next)=>{
-    try {
-       const fetchAllPost = await PostModel.find().populate('author','fullname, bio').sort({createdAt:-1}).skip(0).limit(10);
-       return res.status(200).json(fetchAllPost);
-    } catch (error) {
-        return res.status(500).json({ message: 'Server error', error: error.message });
-    }
-}
-// get Posts for unique User from userID
-module.exports.getMyPosts = async(req,res,next)=>{
-    try {
-        const user = req.user
+module.exports.getAllPost = async (req, res, next) => {
+  try {
+    const fetchAllPost = await PostModel.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate('author', 'fullname bio')
+      .populate({
+        path: 'repostOf',
+        select: 'text author createdAt',
+        populate: {
+          path: 'author',
+          select: 'fullname bio'
+        }
+      });
+
+    return res.status(200).json(fetchAllPost);
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+module.exports.getPostById = async (req, res, next) => {
+  try {
+     const user = req.user
         if(!user){
        return res.status(401).json({message:'Please Login to this user posts'}); 
         }
-    const fetchedUserPost = await PostModel.find({author:user._id})
-    return res.status(200).json(fetchedUserPost)
-    } catch (error) {
-         return res.status(500).json({ message: 'Server error', error: error.message });
+    const postId = req.params.id; 
+    if (!postId) {
+      return res.status(400).json({ message: 'Post ID is required' });
     }
-}
+    const post = await PostModel.findById(postId)
+      .populate('author', 'fullname bio')
+      .populate('comments.user', 'fullname bio');
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    return res.status(200).json(post);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// get Posts for unique User from userID
+
+module.exports.getMyPosts = async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ message: 'Please login to view your posts' });
+    }
+
+    const myPosts = await PostModel.find({ author: user._id })
+      .sort({ createdAt: -1 })
+      .populate('author', 'fullname bio')
+      .populate({
+        path: 'repostOf',
+        select: 'text author createdAt',
+        populate: {
+          path: 'author',
+          select: 'fullname bio '
+        }
+      });
+
+    return res.status(200).json({ message: 'Posts fetched successfully', posts: myPosts });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+
+
+// Get all posts by a specific user
+module.exports.getPostsByUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    const posts = await PostModel.find({ author: userId })
+      .sort({ createdAt: -1 })
+      .populate('author', 'fullname bio')
+      .populate({
+        path: 'repostOf',
+        select: 'text author createdAt',
+        populate: {
+          path: 'author',
+          select: 'fullname bio'
+        }
+      });
+
+    return res.status(200).json(posts);
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 
 module.exports.deletePost = async (req, res, next) => {
   try {
@@ -111,6 +193,52 @@ module.exports.commentOnPost = async(req,res)=>{
         return res.status(500).json({message:'Server error', error: error.message});    
     }
 }
+
+module.exports.repostPost = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: 'Unauthorized' });
+
+    const postId = req.params._id;
+    const originalPost = await PostModel.findById(postId);
+    if (!originalPost) return res.status(404).json({ message: 'Post not found' });
+    const alreadyReposted = await PostModel.findOne({
+      author: user._id,
+      repostOf: postId,
+    });
+
+    if (alreadyReposted) {
+      await PostModel.findByIdAndDelete(alreadyReposted._id);
+      originalPost.reposts = originalPost.reposts.filter(
+        (r) => r.user.toString() !== user._id.toString()
+      );
+      await originalPost.save();
+      return res.status(200).json({ message: 'Repost removed' });
+    } else {
+      const repost = await PostModel.create({
+        author: user._id,
+        repostOf: originalPost._id,
+        text: originalPost.text
+      });
+      if (!originalPost.reposts.some(r => r.user.toString() === user._id.toString())) {
+        originalPost.reposts.push({ user: user._id });
+        await originalPost.save();
+      }
+      const populatedRepost = await PostModel.findById(repost._id)
+        .populate("author", "fullname bio avatar")
+        .populate({
+          path: "repostOf",
+          populate: { path: "author", select: "fullname bio avatar" }
+        });
+
+      return res.status(201).json({ message: 'Reposted', repost: populatedRepost });
+    }
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+
 module.exports.editPost = async(req,res)=>{
     try {
         const user = req.user 

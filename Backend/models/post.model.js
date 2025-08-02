@@ -15,6 +15,12 @@ const PostSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"  
      }],
+     reposts: [
+    {
+      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      createdAt: { type: Date, default: Date.now },
+    }],
+    repostOf: { type: mongoose.Schema.Types.ObjectId, ref: "Post" },
     comments:[
         {
             user:{

@@ -12,6 +12,8 @@ router.post(
 );
 router.get('/', postController.getAllPost);
 router.get('/me', authMiddleware.authUser, postController.getMyPosts);
+router.get('/:id',  authMiddleware.authUser,postController.getPostById);
+router.get('/user/:userId', postController.getPostsByUser);
 router.patch('/like/:_id', authMiddleware.authUser, postController.likePost);
 router.post(
   '/comment/:_id',
@@ -19,6 +21,7 @@ router.post(
   [body('text').notEmpty().withMessage('Comment text is required')],
   postController.commentOnPost
 );
+router.patch('/repost/:_id', authMiddleware.authUser, postController.repostPost);
 router.patch('/edit/:_id', authMiddleware.authUser, postController.editPost);
 router.patch(
   '/comment/:_id/edit',

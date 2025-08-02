@@ -13,8 +13,7 @@ module.exports.registerUser = async(req,res,next) => {
     }
     const hashedPassword = await userModel.hashPassword(password);
     const user = await userService.createUser({
-        firstname:fullname.firstname,
-        lastname:fullname.lastname,
+        fullname,
         email,
         password:hashedPassword
     });
@@ -86,3 +85,16 @@ module.exports.anotherUserProfile = async(req,res,next)=>{
     }
     return res.status(200).json(thatUserProfile)
 }
+module.exports.logoutUser = async (req, res) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", 
+      sameSite: "strict",
+    });
+
+    return res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
