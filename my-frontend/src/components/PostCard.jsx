@@ -21,6 +21,8 @@ import {
   MessageSquare,
   Heart,
 } from "lucide-react";
+import { toast } from "sonner";
+
 export function PostCard({
   post,
   showActions = false,
@@ -60,10 +62,12 @@ export function PostCard({
       const { data } = await axios.patch(`/posts/like/${localPost._id}`);
       setLocalPost((prev) => ({
         ...prev,
-        likes: data.post.likes,
+        likes: data.post.likes,  
       }));
+      toast.success("Post liked!");
     } catch (err) {
       console.error("Failed to like/unlike:", err);
+      toast.error("Failed to like/unlike post");
     }
   };
   const trimmedBio = (bio) =>

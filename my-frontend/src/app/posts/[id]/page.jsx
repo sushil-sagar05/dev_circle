@@ -18,6 +18,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export default function PostPage({ params }) {
   const router = useRouter();
@@ -57,6 +58,7 @@ export default function PostPage({ params }) {
       });
       setPost({ ...post, comments: [...post.comments, data] });
       setNewComment("");
+        toast.success("Comment posted!");
     } catch (err) {
       console.error("Failed to post comment:", err);
     } finally {
@@ -80,7 +82,7 @@ export default function PostPage({ params }) {
     try {
       await axios.patch(`/posts/like/${post._id}`);
     } catch (err) {
-      console.error("Failed to like:", err);
+      toast.error("Failed to update like status.");
       setPost(post);
     }
   };
@@ -90,9 +92,11 @@ export default function PostPage({ params }) {
     try {
       setPost(null);
       await axios.delete(`/posts/${post._id}`);
+      toast.success("Deleted Successfully!");
       router.push("/");
     } catch (err) {
       setPost(prevPost);
+      toast.error("Failed to delete post.");
     }
   };
 
@@ -103,8 +107,10 @@ export default function PostPage({ params }) {
         text: newText,
       });
       setPost(data.post);
+      toast.success("Post updated!");
     } catch (err) {
       console.error("Failed to edit post:", err);
+      toast.error("Failed to update post.");
     }
   };
 
@@ -114,8 +120,10 @@ export default function PostPage({ params }) {
         data: { commentId },
       });
       setPost(data.post);
+      toast.success("Comment deleted!");
     } catch (err) {
       console.error("Failed to delete comment:", err);
+      toast.error("Failed to delete comment.");
     }
   };
 
@@ -127,8 +135,10 @@ export default function PostPage({ params }) {
         text: newText,
       });
       setPost(data.post);
+      toast.success("Comment updated!");
     } catch (err) {
       console.error("Failed to edit comment:", err);
+      toast.error("Failed to update comment.");
     }
   };
 

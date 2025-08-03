@@ -1,12 +1,16 @@
 "use client";
 import { useState } from "react";
 import axios from "@/lib/axios";
+import { useAuth } from "@/lib/useAuth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { toast } from "sonner";
+
 export default function SignupForm() {
+    const { setCurrentUser } = useAuth();
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
@@ -23,7 +27,7 @@ export default function SignupForm() {
     setLoading(true);
     setError("");
     try {
-      await axios.post(
+      const {data} = await axios.post(
         "/user/register",
         {
           email: formData.email,
@@ -32,9 +36,12 @@ export default function SignupForm() {
         },
         { withCredentials: true }
       );
-      router.push("/login");
+      setCurrentUser(data.user);
+      toast.success("Account created successfully! Please log in.");
+      router.push("/");
     } catch (err) {
       setError(err.response?.data?.message || err.message || "Something went wrong");
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

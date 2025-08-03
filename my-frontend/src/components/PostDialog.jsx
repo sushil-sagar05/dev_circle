@@ -5,6 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import axios from "@/lib/axios";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
 export function PostDialog() {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
@@ -16,11 +18,13 @@ export function PostDialog() {
     try {
       setPosting(true);
       const { data } = await axios.post("/posts", { text });
+      toast.success("Post created successfully!");
       setOpen(false);
       setText("");
       router.refresh();
     } catch (err) {
       console.error("Failed to post:", err);
+      toast.error("Failed to create post");
     } finally {
       setPosting(false);
     }

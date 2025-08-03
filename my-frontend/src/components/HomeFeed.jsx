@@ -8,6 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import { PostCard } from "@/components/PostCard";
 import { useAuth } from "@/lib/useAuth";
+import { toast } from "sonner";
+
 export default function HomeFeed() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,8 +41,10 @@ export default function HomeFeed() {
     try {
       setPosts(posts.filter((p) => p._id !== postId));
       await axios.delete(`/posts/${postId}`);
+      toast.success("Post deleted.");
     } catch {
       setPosts(prevPosts);
+      toast.error("Failed to delete post.");
     }
   };
 
@@ -49,8 +53,10 @@ export default function HomeFeed() {
     try {
       const { data } = await axios.patch(`/posts/edit/${postId}`, { text: newText });
       setPosts(posts.map((p) => (p._id === postId ? data.post : p)));
+      toast.success("Post updated.");
     } catch (err) {
       console.error("Failed to edit post:", err);
+      toast.error("Failed to update post.");
     }
   };
 
@@ -63,8 +69,9 @@ export default function HomeFeed() {
       const { data } = await axios.post("/posts", { text: newPost.trim() });
       setPosts((prev) => [data, ...prev]);
       setNewPost("");
+       toast.success("Post published!");
     } catch {
-      // Optionally show toast
+      toast.error("Failed to publish post.");
     } finally {
       setPosting(false);
     }
@@ -82,6 +89,7 @@ export default function HomeFeed() {
           if (prev.find((p) => p._id === repostObj._id)) return prev;
           return [repostObj, ...prev];
         });
+        toast.success("Post reposted.");
       } else if (data.message === "Repost removed") {
         setPosts((prev) =>
           prev.filter(
@@ -89,9 +97,11 @@ export default function HomeFeed() {
               !(p.repostOf === postId && p.author._id === currentUserId)
           )
         );
+        toast.success("Repost removed.");
       }
     } catch (err) {
       console.error("Failed to repost", err);
+      toast.error("Failed to repost.");
     }
   };
 

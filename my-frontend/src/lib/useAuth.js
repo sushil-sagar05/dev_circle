@@ -1,8 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "@/lib/axios";
 import { useRouter } from "next/navigation";
-export function useAuth() {
+const AuthContext = createContext();
+export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -11,7 +12,7 @@ export function useAuth() {
       try {
         const { data } = await axios.get("/user/profile");
         setCurrentUser(data);
-      } catch (err) {
+      } catch {
         setCurrentUser(null);
       } finally {
         setLoading(false);
@@ -19,6 +20,7 @@ export function useAuth() {
     }
     fetchAuth();
   }, []);
+
   const logout = async () => {
     try {
       await axios.post("/user/logout", {}, { withCredentials: true });
@@ -28,5 +30,12 @@ export function useAuth() {
       console.error("Logout failed:", err);
     }
   };
-  return { currentUser, loading, logout };
+  return (
+    <AuthContext.Provider value={{ currentUser, setCurrentUser, loading, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+export function useAuth() {
+  return useContext(AuthContext);
 }

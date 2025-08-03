@@ -14,6 +14,8 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
+
 export default function UserProfile({ params }) {
   const userId = useMemo(() => {
     return typeof params === "object" && "id" in params ? params.id : null;
@@ -49,8 +51,10 @@ export default function UserProfile({ params }) {
     try {
       setPosts(posts.filter((p) => p._id !== postId));
       await axios.delete(`/posts/${postId}`);
+       toast.success("Post deleted.");
     } catch {
       setPosts(prevPosts);
+      toast.error("Failed to delete post.");
     }
   };
   const handleEditPost = async (postId, newText) => {
@@ -58,14 +62,17 @@ export default function UserProfile({ params }) {
     try {
       const { data } = await axios.patch(`/posts/edit/${postId}`, { text: newText });
       setPosts(posts.map((p) => (p._id === postId ? data.post : p)));
+       toast.success("Post updated.");
     } catch (err) {
       console.error("Failed to edit post:", err);
+      toast.error("Failed to update post.");
     }
   };
   const handleRepost = async (postId) => {
     try {
       const { data } = await axios.patch(`/posts/repost/${postId}`);
       if (data.message === "Repost removed") {
+        toast.success("Repost removed.");
         if (data.repost && data.repost._id) {
           setPosts((prev) => prev.filter((p) => p._id !== data.repost._id));
         } else {
@@ -77,6 +84,7 @@ export default function UserProfile({ params }) {
           );
         }
       } else if (data.message === "Reposted" && data.repost) {
+        toast.success("Post reposted.");
         setPosts((prev) => {
           if (prev.find((p) => p._id === data.repost._id)) return prev;
           return [...prev, data.repost];
@@ -84,6 +92,7 @@ export default function UserProfile({ params }) {
       }
     } catch (err) {
       console.error("Failed to repost", err);
+      toast.error("Failed to repost.");
     }
   };
 
@@ -93,10 +102,12 @@ export default function UserProfile({ params }) {
       setProfileUser({ ...profileUser, bio: newBio });
       const { data } = await axios.patch("/user/profile/bio", { bio: newBio });
       setProfileUser(data.UpdatedUser);
+        toast.success("Bio updated successfully!");
       setBioDialogOpen(false);
     } catch {
       setProfileUser((prev) => ({ ...prev, bio: prevBio }));
       setNewBio(prevBio || "");
+      toast.error("Failed to update bio.");
     }
   };
 

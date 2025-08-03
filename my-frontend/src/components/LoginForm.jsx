@@ -2,12 +2,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "@/lib/useAuth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import axios from "@/lib/axios";
 import Image from "next/image";
+import { toast } from "sonner";
+
 export default function LoginForm() {
+    const { setCurrentUser } = useAuth();
   const router = useRouter();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
@@ -21,11 +25,13 @@ export default function LoginForm() {
     setError("");
     try {
       const { data } = await axios.post("/user/login", formData);
-      console.log("Login success", data);
+      setCurrentUser(data.user);
+      toast.success("Login successful!");
       router.push("/");
     } catch (err) {
       const msg = err.response?.data?.message || "Login failed";
       setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
