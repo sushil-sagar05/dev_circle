@@ -1,13 +1,20 @@
 "use client";
 import HomeFeed from "@/components/HomeFeed";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/useAuth";
-
+import { useRouter } from "next/navigation";
 export default function Home() {
-  const { loading } = useAuth();
+  const { currentUser, loading } = useAuth();
   const [personalized, setPersonalized] = useState(true);
+  const router = useRouter();
 
-  if (loading) {
+  useEffect(() => {
+    if (!loading && !currentUser) {
+      router.push("/signup"); 
+    }
+  }, [loading, currentUser, router]);
+
+  if (loading || !currentUser) {
     return <div className="flex-1 p-4">Loading...</div>;
   }
 
