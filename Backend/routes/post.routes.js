@@ -12,8 +12,9 @@ router.post(
 );
 router.get('/', postController.getAllPost);
 router.get('/me', authMiddleware.authUser, postController.getMyPosts);
-router.get('/:id',  authMiddleware.authUser,postController.getPostById);
 router.get('/user/:userId', postController.getPostsByUser);
+router.get('/following', authMiddleware.authUser, postController.getFollowingPosts);
+router.get('/:id',  authMiddleware.authUser,postController.getPostById);
 router.patch('/like/:_id', authMiddleware.authUser, postController.likePost);
 router.post(
   '/comment/:_id',

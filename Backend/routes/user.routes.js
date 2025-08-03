@@ -24,10 +24,13 @@ router.post('/login',
   ],
   userController.loginUser
 );
-
 router.get('/:userId', authMiddleware.authUser, userController.getUserProfile);
 router.get('/user/:id', authMiddleware.authUser, userController.anotherUserProfile);
+router.patch('/follow/:id', authMiddleware.authUser, userController.followUser);
+router.patch('/unfollow/:id', authMiddleware.authUser, userController.unfollowUser);
+router.get('/following', authMiddleware.authUser, userController.getFollowingList);
 router.patch('/profile/bio', authMiddleware.authUser, userController.updateBio);
 router.post("/logout", authMiddleware.authUser, userController.logoutUser);
+
 
 module.exports = router;

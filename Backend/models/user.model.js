@@ -36,7 +36,19 @@ const userSchema = new mongoose.Schema({
             ref:"Post"
             }
           
-    ]
+    ],
+    following: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+  ],
+  followers: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+  ],
 },{timestamps:true})
 userSchema.methods.generateAuthToken = function(){
     const token = jwt.sign({_id:this._id}, process.env.JWT_SECRET,{expiresIn:'24h'});

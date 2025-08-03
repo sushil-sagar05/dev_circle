@@ -10,7 +10,7 @@ import { PostCard } from "@/components/PostCard";
 import { useAuth } from "@/lib/useAuth";
 import { toast } from "sonner";
 
-export default function HomeFeed() {
+export default function HomeFeed({personalized}) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -20,12 +20,17 @@ export default function HomeFeed() {
   const [hasMore, setHasMore] = useState(true);
   const { currentUser } = useAuth();
   const currentUserId = currentUser?._id;
-  const fetchPosts = async (pageNumber = 1) => {
+const fetchPosts = async (pageNumber = 1) => {
   try {
     setLoading(true);
-    const { data } = await axios.get(`/posts?page=${pageNumber}&limit=5`);
-    if (pageNumber === 1) setPosts(data.posts);
-    else setPosts((prev) => [...prev, ...data.posts]);
+    const url = personalized
+      ? `/posts/following?page=${pageNumber}&limit=5`
+      : `/posts?page=${pageNumber}&limit=5`;
+    const { data } = await axios.get(url);
+
+    if (pageNumber === 1) setPosts(data.posts || []);
+    else setPosts((prev) => [...prev, ...(data.posts || [])]);
+
     setHasMore(pageNumber < data.totalPages);
   } catch (err) {
     setError(err.response?.data?.message || "Failed to fetch posts");
@@ -39,9 +44,13 @@ export default function HomeFeed() {
     setPage(nextPage);
     fetchPosts(nextPage);
   };
-  useEffect(() => {
-    fetchPosts();
-  }, []);
+ useEffect(() => {
+  const resetAndFetch = async () => {
+    setPage(1);
+    await fetchPosts(1);
+  };
+  resetAndFetch();
+}, [personalized]);
   const handleDeletePost = async (postId) => {
     const prevPosts = posts;
     try {
@@ -111,7 +120,8 @@ export default function HomeFeed() {
     }
   };
 
-  const sorted = posts.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+const sorted = (Array.isArray(posts) ? posts : []).slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
 
   const isCurrentUserOriginal = (post) =>
     currentUserId && !post.repostOf && post.author._id === currentUserId;

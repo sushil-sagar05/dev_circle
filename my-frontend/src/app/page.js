@@ -1,23 +1,14 @@
 "use client";
-import { useEffect } from "react";
 import HomeFeed from "@/components/HomeFeed";
+import { useState } from "react";
 import { useAuth } from "@/lib/useAuth";
-import { useRouter } from "next/navigation";
+
 export default function Home() {
-  const { currentUser, loading } = useAuth();
-  const router = useRouter();
-  useEffect(() => {
-    if (!loading && !currentUser) {
-      router.push("/signup");
-    }
-  }, [loading, currentUser, router]);
+  const { loading } = useAuth();
+  const [personalized, setPersonalized] = useState(true);
 
   if (loading) {
     return <div className="flex-1 p-4">Loading...</div>;
-  }
-
-  if (!currentUser) {
-    return null;
   }
 
   return (
@@ -33,7 +24,22 @@ export default function Home() {
       }}
     >
       <div className="max-w-4xl mx-auto p-6">
-        <HomeFeed />
+        <div className="flex justify-center gap-4 mb-6">
+          <button
+            className={`px-4 py-2 rounded ${personalized ? "bg-blue-600 text-white" : "bg-gray-300"}`}
+            onClick={() => setPersonalized(true)}
+          >
+            Following
+          </button>
+          <button
+            className={`px-4 py-2 rounded ${!personalized ? "bg-blue-600 text-white" : "bg-gray-300"}`}
+            onClick={() => setPersonalized(false)}
+          >
+            Explore
+          </button>
+        </div>
+
+        <HomeFeed personalized={personalized} />
       </div>
     </main>
   );

@@ -140,6 +140,39 @@ module.exports.getPostsByUser = async (req, res, next) => {
   }
 };
 
+module.exports.getFollowingPosts = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await UserModel.findById(userId).select('following');
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const followingIds = user.following || [];
+
+    const posts = await PostModel.find({ author: { $in: followingIds } })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate('author', 'fullname bio')
+      .populate({
+        path: 'repostOf',
+        select: 'text author createdAt',
+        populate: {
+          path: 'author',
+          select: 'fullname bio',
+        },
+      });
+
+    return res.status(200).json({
+      posts,        
+      totalPages: 1,
+      currentPage: 1,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+
 
 module.exports.deletePost = async (req, res, next) => {
   try {

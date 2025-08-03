@@ -47,4 +47,13 @@ const userRoutes = require('./routes/user.routes')
 const postRoutes = require('./routes/post.routes')
 app.use('/user',userRoutes)
 app.use('/posts',postRoutes)
+app.get('/user/batch', async (req, res) => {
+  try {
+    const ids = req.query.ids.split(',');
+    const users = await userModel.find({ _id: { $in: ids } }).select('fullname email');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 module.exports = app;

@@ -98,3 +98,96 @@ module.exports.logoutUser = async (req, res) => {
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+module.exports.followUser = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const userToFollowId = req.params.id;
+
+    if (currentUserId.toString() === userToFollowId) {
+      return res.status(400).json({ message: "You cannot follow yourself" });
+    }
+
+    const currentUser = await userModel.findById(currentUserId);
+    const userToFollow = await userModel.findById(userToFollowId);
+    if (!userToFollow) {
+      return res.status(404).json({ message: "User to follow not found" });
+    }
+
+    if (currentUser.following.includes(userToFollowId)) {
+      return res.status(400).json({ message: "Already following this user" });
+    }
+
+    currentUser.following.push(userToFollowId);
+    userToFollow.followers.push(currentUserId);
+
+    await currentUser.save();
+    await userToFollow.save();
+
+    await currentUser.populate('following', 'fullname email bio');
+
+    return res.status(200).json({
+      message: "Successfully followed user",
+      following: currentUser.following,
+    });
+  } catch (error) {
+    console.error("Follow error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports.unfollowUser = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const userToUnfollowId = req.params.id;
+
+    if (currentUserId.toString() === userToUnfollowId) {
+      return res.status(400).json({ message: "You cannot unfollow yourself" });
+    }
+
+    const currentUser = await userModel.findById(currentUserId);
+    const userToUnfollow = await userModel.findById(userToUnfollowId);
+    if (!userToUnfollow) {
+      return res.status(404).json({ message: "User to unfollow not found" });
+    }
+    currentUser.following = currentUser.following.filter(
+      (id) => id.toString() !== userToUnfollowId
+    );
+    userToUnfollow.followers = userToUnfollow.followers.filter(
+      (id) => id.toString() !== currentUserId.toString()
+    );
+
+    await currentUser.save();
+    await userToUnfollow.save();
+    await currentUser.populate('following', 'fullname email bio');
+
+    return res.status(200).json({
+      message: "Successfully unfollowed user",
+      following: currentUser.following,
+    });
+  } catch (error) {
+    console.error("Unfollow error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports.getFollowingList = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+  const user = await userModel
+  .findById(currentUserId)
+  .populate('following')
+  .exec();
+console.log(user);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    return res.status(200).json({
+      following: user.following,
+    });
+  } catch (error) {
+    console.error("Get following list error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+

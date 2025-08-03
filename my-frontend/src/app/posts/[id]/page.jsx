@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
-import { Edit, Trash2, ArrowLeft } from "lucide-react"; // Added ArrowLeft
+import { Edit, Trash2, ArrowLeft } from "lucide-react"; 
 import { CommentCard } from "@/components/CommentCard";
 import { format, formatDistanceToNow } from "date-fns";
 import {
@@ -155,7 +155,6 @@ export default function PostPage({ params }) {
 
   return (
     <div className="max-w-2xl mx-auto mt-10 px-4 sm:px-0 space-y-8">
-      {/* Back Arrow Button */}
       <button
         onClick={() => router.back()}
         className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
