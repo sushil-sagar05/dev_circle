@@ -217,26 +217,41 @@ module.exports.likePost = async(req,res)=>{
      return res.status(500).json({ message: 'Server error', error: error.message });   
     }
 }
-module.exports.commentOnPost = async(req,res)=>{
-    try {
-           const user = req.user;
+module.exports.commentOnPost = async (req, res) => {
+  try {
+    const user = req.user;
     if (!user) {
-      return res.status(401).json({message: 'You need to login to perform this action'});
+      return res.status(401).json({ message: 'You need to login to perform this action' });
     }
-    const PostId = req.params._id
-    const retreivedPost = await PostModel.findById(PostId)
-    if(!retreivedPost){
-        return res.status(404).json({message: 'Post not found'});
+
+    const postId = req.params._id;
+    const retrievedPost = await PostModel.findById(postId);
+    if (!retrievedPost) {
+      return res.status(404).json({ message: 'Post not found' });
     }
-    const {text} = req.body
-    retreivedPost.comments.push({user:user._id,text,createdAt:Date.now()})
-    await retreivedPost.save()
-    const populatedPost = await retreivedPost.populate('comments.user', 'fullname');
-    return res.status(200).json({message:'commented on Post successfully', post: populatedPost});
-    } catch (error) {
-        return res.status(500).json({message:'Server error', error: error.message});    
-    }
-}
+
+    const { text } = req.body;
+    const newComment = {
+      user: user._id,
+      text,
+      createdAt: new Date(), 
+    };
+
+    retrievedPost.comments.push(newComment);
+    await retrievedPost.save();
+    const lastComment = retrievedPost.comments[retrievedPost.comments.length - 1];
+    await retrievedPost.populate('comments.user', 'fullname');
+
+    const populatedComment = retrievedPost.comments.find(
+      (comment) => comment._id.toString() === lastComment._id.toString()
+    );
+
+    return res.status(200).json(populatedComment); 
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 
 module.exports.repostPost = async (req, res) => {
   try {

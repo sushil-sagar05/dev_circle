@@ -45,9 +45,15 @@ export function CommentCard({ comment, currentUserId, onEdit, onDelete }) {
       ) : (<>
         <p className="mb-2">{comment.text}</p>
         <p className="text-xs text-gray-400">
-             {format(new Date(comment.createdAt), "MMMM d, yyyy, h:mm a")} •{" "}
-            {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-        </p>
+  {comment.createdAt && !isNaN(new Date(comment.createdAt)) ? (
+    <>
+      Posted on {format(new Date(comment.createdAt), "MMMM d, yyyy, h:mm a")} •{" "}
+      {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+    </>
+  ) : (
+    "Date not available"
+  )}
+</p>
         </> 
     )}
       {isAuthor && !isEditing && (

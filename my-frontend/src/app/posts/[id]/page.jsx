@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
-import { Edit, Trash2, ArrowLeft } from "lucide-react"; 
+import { Edit, Trash2, ArrowLeft } from "lucide-react";
 import { CommentCard } from "@/components/CommentCard";
 import { format, formatDistanceToNow } from "date-fns";
 import {
@@ -22,7 +22,8 @@ import { toast } from "sonner";
 
 export default function PostPage({ params }) {
   const router = useRouter();
-  const { id: postId } = params; 
+  const { id: postId } = params;
+
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -58,7 +59,7 @@ export default function PostPage({ params }) {
       });
       setPost({ ...post, comments: [...post.comments, data] });
       setNewComment("");
-        toast.success("Comment posted!");
+      toast.success("Comment posted!");
     } catch (err) {
       console.error("Failed to post comment:", err);
     } finally {
@@ -71,12 +72,10 @@ export default function PostPage({ params }) {
 
     const userId = currentUser?._id;
     const hasLiked = post.likes?.some((id) => id === userId);
-    let updatedLikes;
-    if (hasLiked) {
-      updatedLikes = post.likes.filter((id) => id !== userId);
-    } else {
-      updatedLikes = [...(post.likes || []), userId];
-    }
+    const updatedLikes = hasLiked
+      ? post.likes.filter((id) => id !== userId)
+      : [...(post.likes || []), userId];
+
     setPost({ ...post, likes: updatedLikes });
 
     try {
@@ -109,7 +108,6 @@ export default function PostPage({ params }) {
       setPost(data.post);
       toast.success("Post updated!");
     } catch (err) {
-      console.error("Failed to edit post:", err);
       toast.error("Failed to update post.");
     }
   };
@@ -122,7 +120,6 @@ export default function PostPage({ params }) {
       setPost(data.post);
       toast.success("Comment deleted!");
     } catch (err) {
-      console.error("Failed to delete comment:", err);
       toast.error("Failed to delete comment.");
     }
   };
@@ -137,7 +134,6 @@ export default function PostPage({ params }) {
       setPost(data.post);
       toast.success("Comment updated!");
     } catch (err) {
-      console.error("Failed to edit comment:", err);
       toast.error("Failed to update comment.");
     }
   };
@@ -166,18 +162,10 @@ export default function PostPage({ params }) {
       <div className="relative space-y-3 p-6 rounded-lg border bg-white shadow-sm">
         {isPostAuthor && (
           <div className="absolute top-4 right-4 flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setEditDialogOpen(true)}
-            >
+            <Button variant="ghost" size="icon" onClick={() => setEditDialogOpen(true)}>
               <Edit className="h-4 w-4 text-blue-600" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setDeleteDialogOpen(true)}
-            >
+            <Button variant="ghost" size="icon" onClick={() => setDeleteDialogOpen(true)}>
               <Trash2 className="h-4 w-4 text-red-500" />
             </Button>
           </div>
@@ -192,35 +180,16 @@ export default function PostPage({ params }) {
         <p className="text-sm text-gray-500">{trimmedBio}</p>
         <p className="text-base text-gray-800 whitespace-pre-wrap">{post.text}</p>
         <p className="text-xs text-gray-400">
-          Posted on {format(new Date(post.createdAt), "MMMM d, yyyy, h:mm a")} •{" "}
-          {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+          {post.createdAt && !isNaN(new Date(post.createdAt)) ? (
+            <>
+              Posted on {format(new Date(post.createdAt), "MMMM d, yyyy, h:mm a")} •{" "}
+              {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+            </>
+          ) : (
+            "Date not available"
+          )}
         </p>
       </div>
-
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent onClick={(e) => e.stopPropagation()}>
-          <DialogHeader>
-            <DialogTitle>Delete Post</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this post? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                handleDeletePost();
-                setDeleteDialogOpen(false);
-              }}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <div className="flex gap-4 border-y py-3 px-1 text-sm">
         <Button
@@ -268,7 +237,6 @@ export default function PostPage({ params }) {
           <p className="text-center text-gray-400 text-sm">No comments yet</p>
         )}
       </div>
-
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
@@ -295,6 +263,30 @@ export default function PostPage({ params }) {
               }}
             >
               Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent onClick={(e) => e.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle>Delete Post</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this post? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                handleDeletePost();
+                setDeleteDialogOpen(false);
+              }}
+            >
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>
