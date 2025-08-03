@@ -29,14 +29,14 @@ A developer-centric social media platform where users can post updates, follow e
 
 ## 📸 Screenshots
 ### Landing Page
-![Landing](./public/images/landing-page-photo)
+![Landing](./public/images/landing-page-photo.png)
 
 ### Profile Page
-![Profile](./public/images/profile-page-photo)
+![Profile](./public/images/profile-page-photo.png)
 
 
 ## 🚀 Getting Started
-```bash
+bash
 git clone https://github.com/sushil-sagar05/dev-circle.git
 cd dev-circle
 
