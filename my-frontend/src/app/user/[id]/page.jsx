@@ -11,12 +11,15 @@ import {
   DialogTitle, DialogFooter, DialogClose
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 
 export default function UserProfile({ params }) {
   const userId = useMemo(() => (
     typeof params === "object" && "id" in params ? params.id : null
   ), [params]);
   const { currentUser } = useAuth();
+  const router = useRouter();
   const [profileUser, setProfileUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,37 +51,46 @@ export default function UserProfile({ params }) {
     if (userId) fetchData();
     return () => { ignore = true };
   }, [userId]);
-  useEffect(() => {
-    if (
-      currentUser &&
-      profileUser &&
-      currentUser._id !== profileUser._id
-    ) {
-      axios
-        .get("/user/following")
-        .then((res) => {
-          const followedIds = res.data.following.map((u) => u._id);
-          setIsFollowing(followedIds.includes(profileUser._id));
-        })
-        .catch(() => setIsFollowing(false));
-    }
-  }, [currentUser, profileUser]);
+useEffect(() => {
+  if (
+    currentUser?.following &&
+    profileUser &&
+    currentUser._id !== profileUser._id
+  ) {
+    axios.get("/user/following")
+      .then((res) => {
+        const followedIds = Array.isArray(res.data.following)
+          ? res.data.following.map((u) => u._id)
+          : [];
+        setIsFollowing(followedIds.includes(profileUser._id));
+      })
+      .catch(() => {
+        setIsFollowing(false);
+      });
+  }
+}, [currentUser, profileUser]);
+
 
   const handleFollowToggle = async () => {
     if (!profileUser || !currentUser) return;
     setFollowLoading(true);
     try {
       if (isFollowing) {
-        await axios.post(`/user/unfollow/${profileUser._id}`);
+        await axios.patch(`/user/unfollow/${profileUser._id}`);
         setIsFollowing(false);
         toast.success(`Unfollowed ${profileUser.fullname}`);
       } else {
-        await axios.post(`/user/follow/${profileUser._id}`);
+        await axios.patch(`/user/follow/${profileUser._id}`);
         setIsFollowing(true);
         toast.success(`Followed ${profileUser.fullname}`);
       }
-    } catch {
-      toast.error("Failed to update follow status");
+    } catch(err) {
+      let msg =
+      err?.response?.data?.message ||
+      err?.response?.data?.error ||
+      err?.message ||
+      "Failed to update follow status";
+    toast.error(msg);
     } finally {
       setFollowLoading(false);
     }
@@ -176,6 +188,13 @@ export default function UserProfile({ params }) {
 
   return (
     <div className="max-w-2xl mx-auto sm:pt-20 p-4 space-y-8">
+         <button
+      onClick={() => router.back()}
+      className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
+    >
+      <ArrowLeft className="w-4 h-4" />
+      Back
+    </button>
       <section className="flex gap-5 items-start border-b pb-7">
         <div className="
           w-20 h-20 rounded-full bg-gradient-to-br from-blue-200 to-blue-400

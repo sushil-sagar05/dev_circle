@@ -22,7 +22,7 @@ import { toast } from "sonner";
 
 export default function PostPage({ params }) {
   const router = useRouter();
-  const { id: postId } = params; // Fixed line
+  const { id: postId } = params; 
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
