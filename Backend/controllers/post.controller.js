@@ -29,24 +29,35 @@ module.exports.CreatePost = async(req,res,next)=>{
 // for public Feed All latest post
 module.exports.getAllPost = async (req, res, next) => {
   try {
-    const fetchAllPost = await PostModel.find()
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const totalCount = await PostModel.countDocuments();
+    const posts = await PostModel.find()
       .sort({ createdAt: -1 })
-      .limit(10)
+      .skip(skip)
+      .limit(limit)
       .populate('author', 'fullname bio')
       .populate({
         path: 'repostOf',
         select: 'text author createdAt',
         populate: {
           path: 'author',
-          select: 'fullname bio'
-        }
+          select: 'fullname bio',
+        },
       });
-
-    return res.status(200).json(fetchAllPost);
+    const totalPages = Math.ceil(totalCount / limit);
+    return res.status(200).json({
+      posts,
+      totalPages,
+      currentPage: page,
+      totalCount,
+    });
   } catch (error) {
     return res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 
 module.exports.getPostById = async (req, res, next) => {
   try {

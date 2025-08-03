@@ -21,17 +21,23 @@ export default function HomeFeed() {
   const { currentUser } = useAuth();
   const currentUserId = currentUser?._id;
   const fetchPosts = async (pageNumber = 1) => {
-    try {
-      setLoading(true);
-      const { data } = await axios.get(`/posts?page=${pageNumber}&limit=5`);
-      if (pageNumber === 1) setPosts(data);
-      else setPosts((prev) => [...prev, ...data]);
-      setHasMore(data.length === 5);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch posts");
-    } finally {
-      setLoading(false);
-    }
+  try {
+    setLoading(true);
+    const { data } = await axios.get(`/posts?page=${pageNumber}&limit=5`);
+    if (pageNumber === 1) setPosts(data.posts);
+    else setPosts((prev) => [...prev, ...data.posts]);
+    setHasMore(pageNumber < data.totalPages);
+  } catch (err) {
+    setError(err.response?.data?.message || "Failed to fetch posts");
+  } finally {
+    setLoading(false);
+  }
+};
+    const loadMorePosts = () => {
+    if (!hasMore) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchPosts(nextPage);
   };
   useEffect(() => {
     fetchPosts();
@@ -105,12 +111,6 @@ export default function HomeFeed() {
     }
   };
 
-  const loadMorePosts = () => {
-    if (!hasMore) return;
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchPosts(nextPage);
-  };
   const sorted = posts.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const isCurrentUserOriginal = (post) =>
