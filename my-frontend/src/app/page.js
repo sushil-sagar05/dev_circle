@@ -1,12 +1,25 @@
 "use client";
+import { useEffect } from "react";
 import HomeFeed from "@/components/HomeFeed";
 import { useAuth } from "@/lib/useAuth";
+import { useRouter } from "next/navigation";
 export default function Home() {
-  const { loading } = useAuth();
+  const { currentUser, loading } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    if (!loading && !currentUser) {
+      router.push("/signup");
+    }
+  }, [loading, currentUser, router]);
 
   if (loading) {
     return <div className="flex-1 p-4">Loading...</div>;
   }
+
+  if (!currentUser) {
+    return null;
+  }
+
   return (
     <main
       className="flex-1 overflow-y-auto"
