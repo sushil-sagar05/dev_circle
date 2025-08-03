@@ -145,31 +145,27 @@ module.exports.unfollowUser = async (req, res) => {
       return res.status(400).json({ message: "You cannot unfollow yourself" });
     }
 
-    const currentUser = await userModel.findById(currentUserId);
     const userToUnfollow = await userModel.findById(userToUnfollowId);
     if (!userToUnfollow) {
       return res.status(404).json({ message: "User to unfollow not found" });
     }
-    currentUser.following = currentUser.following.filter(
-      (id) => id.toString() !== userToUnfollowId
-    );
-    userToUnfollow.followers = userToUnfollow.followers.filter(
-      (id) => id.toString() !== currentUserId.toString()
-    );
-
-    await currentUser.save();
-    await userToUnfollow.save();
-    await currentUser.populate('following', 'fullname email bio');
-
+    await userModel.findByIdAndUpdate(currentUserId, {
+      $pull: { following: userToUnfollowId }
+    });
+    await userModel.findByIdAndUpdate(userToUnfollowId, {
+      $pull: { followers: currentUserId }
+    });
+    const updatedCurrentUser = await userModel.findById(currentUserId).populate('following', 'fullname email bio');
     return res.status(200).json({
       message: "Successfully unfollowed user",
-      following: currentUser.following,
+      following: updatedCurrentUser.following,
     });
   } catch (error) {
     console.error("Unfollow error:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
+
 
 module.exports.getFollowingList = async (req, res) => {
   try {
