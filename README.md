@@ -29,10 +29,10 @@ A developer-centric social media platform where users can post updates, follow e
 
 ## 📸 Screenshots
 ### Landing Page
-![Landing](./public/images/landing-page-photo.png)
+![Landing](my-frontend/public/images/landing-page-photo.png)
 
 ### Profile Page
-![Profile](./public/images/profile-page-photo.png)
+![Profile](my-frontend/public/images/profile-page-photo.png)
 
 
 ## 🚀 Getting Started
