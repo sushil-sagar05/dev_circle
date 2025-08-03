@@ -60,15 +60,18 @@ useEffect(() => {
     axios.get("/user/following")
       .then((res) => {
         const followedIds = Array.isArray(res.data.following)
-          ? res.data.following.map((u) => u._id)
+          ? res.data.following.map((u) => u.toString()) 
           : [];
-        setIsFollowing(followedIds.includes(profileUser._id));
+        console.log("Followed IDs:", followedIds);
+        console.log("Profile User ID:", profileUser._id.toString());
+        setIsFollowing(followedIds.includes(profileUser._id.toString()));
       })
       .catch(() => {
         setIsFollowing(false);
       });
   }
 }, [currentUser, profileUser]);
+
 
 
   const handleFollowToggle = async () => {
